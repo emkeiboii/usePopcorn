@@ -12,39 +12,47 @@ export default function App() {
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
 
-  const query = "adwgaon";
+  useEffect(
+    function () {
+      async function fetchMovies() {
+        try {
+          setIsLoading(true);
+          setError("");
+          const res = await fetch(
+            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+          );
 
-  useEffect(function () {
-    async function fetchMovies() {
-      try {
-        setIsLoading(true);
-        const res = await fetch(
-          `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
-        );
+          if (!res.ok) throw new Error("Something went wrong with fetching");
 
-        if (!res.ok) throw new Error("Something went wrong with fetching");
+          const data = await res.json();
 
-        const data = await res.json();
+          if (data.Response === "False") throw new Error("Movie not found");
 
-        if (data.Response === "False") throw new Error("Movie not found");
-
-        setMovies(data.Search);
-      } catch (err) {
-        console.error(err.message);
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
+          setMovies(data.Search);
+        } catch (err) {
+          console.error(err.message);
+          setError(err.message);
+        } finally {
+          setIsLoading(false);
+        }
+        if (query.length < 3) {
+          setMovies([]);
+          setError("");
+          return;
+        }
       }
-    }
-    fetchMovies();
-  }, []);
+      fetchMovies();
+    },
+    [query]
+  );
 
   return (
     <>
       <NavBar>
         <Logo />
-        <Search />
+        <Search query={query} setQuery={setQuery} />
         <MovieCounter movies={movies} />
       </NavBar>
 
@@ -68,7 +76,7 @@ export default function App() {
 function ErrorMessage({ message }) {
   return (
     <p className="error">
-      <span>📛</span>
+      <span>⛔️</span>
       {message}
     </p>
   );
@@ -82,9 +90,7 @@ function NavBar({ children }) {
   return <nav className="nav-bar">{children}</nav>;
 }
 
-function Search() {
-  const [query, setQuery] = useState("");
-
+function Search({ query, setQuery }) {
   return (
     <input
       className="search"
