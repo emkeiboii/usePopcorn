@@ -15,7 +15,7 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState("");
 
-  function handleSelect(id) {
+  function handleSelectMovie(id) {
     setSelectedId((selectedId) => (id === selectedId ? null : id));
   }
 
@@ -72,7 +72,7 @@ export default function App() {
           {/*{isLoading ? <Loader /> : <MoviesList movies={movies} />}*/}
           {isLoading && <Loader />}
           {!isLoading && !error && (
-            <MoviesList movies={movies} onSelect={handleSelect} />
+            <MoviesList movies={movies} onSelectMovie={handleSelectMovie} />
           )}
           {error && <ErrorMessage message={error} />}
         </Box>
@@ -156,19 +156,19 @@ function Box({ children }) {
   );
 }
 
-function MoviesList({ movies, onSelect }) {
+function MoviesList({ movies, onSelectMovie }) {
   return (
     <ul className="list list-movies">
       {movies?.map((movie) => (
-        <Movie movie={movie} key={movie.imdbID} onSelect={onSelect} />
+        <Movie movie={movie} key={movie.imdbID} onSelectMovie={onSelectMovie} />
       ))}
     </ul>
   );
 }
 
-function Movie({ movie, onSelect }) {
+function Movie({ movie, onSelectMovie }) {
   return (
-    <li onClick={() => onSelect(movie.imdbID)}>
+    <li onClick={() => onSelectMovie(movie.imdbID)}>
       <img src={movie.Poster} alt={`${movie.Title} poster`} />
       <h3>{movie.Title}</h3>
       <div>
@@ -182,12 +182,60 @@ function Movie({ movie, onSelect }) {
 }
 
 function MovieDetails({ selectedId, onCloseMovie }) {
+  const [movie, setMovie] = useState({});
+
+  const {
+    Title: title,
+    Year: year,
+    Poster: poster,
+    Runtime: runtime,
+    imdbRating,
+    Plot: plot,
+    Released: released,
+    Actors: actors,
+    Director: director,
+    Genre: genre,
+  } = movie;
+
+  useEffect(
+    function () {
+      async function getMovieDetails() {
+        const res = await fetch(
+          `http://www.omdbapi.com/?apikey=${KEY}&i=${selectedId}`
+        );
+
+        const data = await res.json();
+        setMovie(data);
+      }
+      getMovieDetails();
+    },
+    [selectedId]
+  );
+
   return (
     <div className="details">
-      <button className="btn-back" onClick={() => onCloseMovie()}>
-        &larr;
-      </button>
-      {selectedId}
+      <header>
+        <button className="btn-back" onClick={() => onCloseMovie()}>
+          &larr;
+        </button>
+        <img src={poster} alt={`Poster of ${movie} movie`} />
+        <div className="details-overview">
+          <h2>{title}</h2>
+          <p>
+            {released} &bull; {runtime}
+          </p>
+          <p>{genre}</p>
+          <p>
+            <span>⭐️</span>
+            {imdbRating} IMDb rating
+          </p>
+        </div>
+      </header>
+      <section>
+        <p>
+          <i>{plot}</i>
+        </p>
+      </section>
     </div>
   );
 }
