@@ -140,7 +140,7 @@ function Logo() {
   return (
     <div className="logo">
       <span role="img">🍿</span>
-      <h1>usePopcorn</h1>
+      <h1>Popcorner</h1>
     </div>
   );
 }
@@ -259,6 +259,10 @@ function MovieDetails({
     function () {
       if (!title) return;
       document.title = `Movie | ${title}`;
+
+      return function () {
+        document.title = "Popcorner 🍿";
+      };
     },
     [title]
   );
